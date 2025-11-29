@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>木鱼计数器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid #e0e0e0;
+        }
+        
+        h1 {
+            color: #8B4513;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        
+        .wooden-fish-container {
+            position: relative;
+            margin: 20px auto;
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        
+        .wooden-fish {
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><path d="M100,30 C60,30 30,60 30,100 C30,140 60,170 100,170 C140,170 170,140 170,100 C170,60 140,30 100,30 Z" fill="%238B4513" stroke="%235D4037" stroke-width="2"/><path d="M100,40 C65,40 40,65 40,100 C40,135 65,160 100,160 C135,160 160,135 160,100 C160,65 135,40 100,40 Z" fill="%23A1887F" stroke="%235D4037" stroke-width="1"/><circle cx="100" cy="100" r="50" fill="%23D7CCC8" stroke="%235D4037" stroke-width="1"/><path d="M70,100 C70,85 85,70 100,70 C115,70 130,85 130,100 C130,115 115,130 100,130 C85,130 70,115 70,100 Z" fill="%23FFD54F" stroke="%23FFB300" stroke-width="1"/><circle cx="100" cy="100" r="10" fill="%235D4037"/></svg>') no-repeat center;
+            background-size: contain;
+            transition: all 0.1s;
+        }
+        
+        .wooden-fish-container:active {
+            transform: scale(0.95);
+        }
+        
+        .wooden-fish-container:active .wooden-fish {
+            filter: brightness(1.1);
+        }
+        
+        .counter {
+            font-size: 3rem;
+            color: #5D4037;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .reset-btn {
+            background-color: #8B4513;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(139, 69, 19, 0.3);
+            margin-top: 10px;
+        }
+        
+        .reset-btn:hover {
+            background-color: #5D4037;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(139, 69, 19, 0.4);
+        }
+        
+        .reset-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(139, 69, 19, 0.4);
+        }
+        
+        .click-hint {
+            color: #8B4513;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        .click-animation {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, rgba(255,213,79,0.8) 0%, rgba(255,213,79,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: clickEffect 0.5s ease-out;
+        }
+        
+        @keyframes clickEffect {
+            0% {
+                transform: scale(0.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .footer {
+            margin-top: 30px;
+            color: #888;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>木鱼计数器</h1>
+        <p class="subtitle">点击木鱼计数，净化心灵</p>
+        
+        <div class="wooden-fish-container" id="woodenFish">
+            <div class="wooden-fish"></div>
+        </div>
+        
+        <div class="counter" id="counter">0</div>
+        
+        <button class="reset-btn" id="resetBtn">清空计数</button>
+        
+        <p class="click-hint">点击木鱼或按空格键增加计数</p>
+        
+        <div class="footer">
+            设计灵感来源于传统佛教法器
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const woodenFish = document.getElementById('woodenFish');
+            const counterElement = document.getElementById('counter');
+            const resetBtn = document.getElementById('resetBtn');
+            
+            let count = 0;
+            
+            // 创建音效
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            function playWoodenFishSound() {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 220;
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 1);
+            }
+            
+            function createClickAnimation(x, y) {
+                const animation = document.createElement('div');
+                animation.className = 'click-animation';
+                animation.style.left = `${x - 25}px`;
+                animation.style.top = `${y - 25}px`;
+                
+                woodenFish.appendChild(animation);
+                
+                setTimeout(() => {
+                    woodenFish.removeChild(animation);
+                }, 500);
+            }
+            
+            function incrementCounter() {
+                count++;
+                counterElement.textContent = count;
+                playWoodenFishSound();
+            }
+            
+            woodenFish.addEventListener('click', function(e) {
+                incrementCounter();
+                createClickAnimation(e.offsetX, e.offsetY);
+            });
+            
+            resetBtn.addEventListener('click', function() {
+                count = 0;
+                counterElement.textContent = count;
+            });
+            
+            // 添加键盘支持
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    incrementCounter();
+                    
+                    // 在木鱼中心创建动画效果
+                    const rect = woodenFish.getBoundingClientRect();
+                    createClickAnimation(rect.width / 2, rect.height / 2);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
